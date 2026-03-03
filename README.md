@@ -199,45 +199,44 @@ Sentimen Analisis/
 
 ### Workflow Pipeline
 
-```
-Raw Text Data (20,000 reviews)
-         ↓
-[Text Cleaning & Preprocessing]
-├─ Lowercase + Unidecode
-├─ Remove emoji, URLs, mentions
-├─ Remove special characters
-├─ Tokenization
-├─ Fix slang words
-├─ Handle negation
-├─ Remove stopwords
-└─ Stemming (Sastrawi)
-         ↓
-[Automatic Labeling - Hugging Face RoBERTa]
-├─ Model: indonesian-roberta-base-sentiment-classifier
-├─ 3 Classes: Negative, Neutral, Positive
-└─ Output: Labeled dataset
-         ↓
-[Feature Engineering]
-├─ Sequence to tokens (Tokenizer)
-├─ Padding (max_length=60)
-├─ Embedding matrix (FastText 100-dim)
-└─ Label encoding (0,1,2)
-         ↓
-[Data Augmentation]
-├─ Positive class: 1x augmentation
-├─ Neutral class: 2x augmentation
-└─ Result: Balanced training set
-         ↓
-[Model Training]
-├─ Architecture: BiLSTM with Embedding
-├─ Optimizer: Adam
-├─ Early Stopping + ReduceLROnPlateau
-├─ Class weights: balanced
-└─ Output: Trained model
-         ↓
-[Evaluation & Inference]
-└─ Metrics: Accuracy, Precision, Recall, F1-Score
-```
+Raw Text Data (20,000 reviews)  
+↓  
+**Text Cleaning & Preprocessing**
+- Lowercase + Unidecode
+- Remove emoji, URLs, mentions
+- Remove special characters
+- Tokenization
+- Fix slang words
+- Handle negation
+- Remove stopwords
+- Stemming (Sastrawi)
+↓  
+**Automatic Labeling – Hugging Face RoBERTa**
+- Model: indonesian-roberta-base-sentiment-classifier
+- 3 Classes: Negative, Neutral, Positive
+- Output: Labeled dataset
+↓  
+**Feature Engineering**
+- Sequence to tokens (Tokenizer)
+- Padding (max_length=60)
+- Embedding matrix (FastText 100‑dim)
+- Label encoding (0,1,2)
+↓  
+**Data Augmentation**
+- Positive class: 1× augmentation
+- Neutral class: 2× augmentation
+- Result: Balanced training set
+↓  
+**Model Training**
+- Architecture: BiLSTM with Embedding
+- Optimizer: Adam
+- Early Stopping + ReduceLROnPlateau
+- Class weights: balanced
+- Output: Trained model
+↓  
+**Evaluation & Inference**
+- Metrics: Accuracy, Precision, Recall, F1-Score
+
 
 #### Accuracy & Loss
 ```
