@@ -1,0 +1,6 @@
+data/
+notebooks/tuning_dir/
+*.keras
+*.h5
+.venv/
+__pycache__/
