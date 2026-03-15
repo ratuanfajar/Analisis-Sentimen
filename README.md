@@ -1,308 +1,245 @@
-# Analisis Sentimen - Review BPJS Mobile
- 
+# Sentiment Analysis - BPJS Mobile Reviews
+
 ![Python](https://img.shields.io/badge/Python-3.12+-blue)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20+-orange)
+![Keras](https://img.shields.io/badge/Keras-3.13+-red)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## 📋 Project Overview
+## Project Overview
 
-**Sentiment Analysis - BPJS Mobile Reviews** adalah proyek yang mengklasifikasikan sentimen ulasan pengguna aplikasi BPJS Mobile dari Google Play Store. Proyek ini menggunakan pendekatan deep learning dengan arsitektur Bidirectional LSTM (BiLSTM) dan Natural Language Processing untuk menganalisis sentimen dalam bahasa Indonesia.
+**Sentiment Analysis - BPJS Mobile Reviews** is a deep learning project that classifies user reviews from the BPJS Mobile application on Google Play Store into sentiment categories. The project implements Bidirectional LSTM (BiLSTM) with Natural Language Processing for sentiment classification in Indonesian language.
 
-### 🎯 Tujuan Utama
-- Mengklasifikasikan ulasan menjadi 3 kategori sentimen: Positif, Netral, dan Negatif
-- Membantu memahami persepsi pengguna terhadap aplikasi BPJS Mobile
-- Mengidentifikasi area yang perlu ditingkatkan berdasarkan sentimen negatif
+### Objectives
+- Classify user reviews into **3 sentiment classes**: Positive, Neutral, and Negative
+- Analyze user perception and satisfaction with BPJS Mobile
+- Identify improvement areas based on negative sentiment feedback
+- Provide actionable insights for product development teams
 
 ---
 
-## 🛠️ Installation and Setup
+## Installation and Setup
 
-### Codes and Resources Used
+### Requirements & Tools
+| Component | Version | Description |
+|-----------|---------|-------------|
+| **Python** | 3.12+ | Programming language |
+| **Editor** | VS Code | Code editor |
+| **Package Manager** | uv / pip | Dependency management |
+| **Virtual Environment** | .venv | Isolated Python environment |
 
-| Deskripsi | Detail |
-|-----------|--------|
-| **Editor** | Visual Studio Code |
-| **Python Version** | 3.12+ |
-| **Environment Manager** | uv (atau pip) |
-| **Virtual Environment** | .venv (opsional) |
+### Core Dependencies
 
-### Python Packages Used
-
-#### General Purpose
+#### Data & General Processing
 ```
-emoji>=2.15.0
-regex>=2026.2.19
-requests>=2.32.5
-unidecode>=1.4.0
-tqdm>=4.67.3
-```
-
-#### Data Manipulation & Processing
-```
-pandas>=3.0.1
-numpy>=1.24.0
+pandas >= 3.0.1
+numpy >= 1.24.0
+emoji >= 2.15.0
+regex >= 2026.2.19
+requests >= 2.32.5
+unidecode >= 1.4.0
+tqdm >= 4.67.3
 ```
 
 #### Data Visualization
 ```
-matplotlib>=3.10.8
-seaborn>=0.13.2
-wordcloud>=1.9.6
+matplotlib >= 3.10.8
+seaborn >= 0.13.2
+wordcloud >= 1.9.6
 ```
 
 #### Natural Language Processing (NLP)
 ```
-nltk>=3.9.3
-sastrawi>=1.0.1
-spacy>=3.8.11
-stanza>=1.11.0
-transformers>=5.2.0
-nlpaug>=1.1.11
-gensim>=4.4.0
-fasttext-wheel>=0.9.2
+nltk >= 3.9.3
+sastrawi >= 1.0.1
+spacy >= 3.8.11
+transformers >= 5.2.0
+nlpaug >= 1.1.11
+gensim >= 4.4.0
+fasttext-wheel >= 0.9.2
+google-play-scraper >= 1.2.7
 ```
 
 #### Machine Learning & Deep Learning
 ```
-scikit-learn>=1.8.0
-tensorflow>=2.20.0
-keras>=3.13.2
-keras-tuner>=1.4.8
-google-play-scraper>=1.2.7
+scikit-learn >= 1.8.0
+tensorflow >= 2.20.0
+keras >= 3.13.2
+keras-tuner >= 1.4.8
 ```
 
 ### Quick Setup
 
 ```bash
-# 1. Navigate to project directory
+# Navigate to project directory
 cd "d:\document\coding\project\Sentimen Analisis"
 
-# 2. Create virtual environment (optional)
+# Create virtual environment (optional)
 python -m venv .venv
-.venv\Scripts\activate  # Windows
-source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate          # Windows
+source .venv/bin/activate       # Linux/Mac
 
-# 3. Install dependencies
+# Install dependencies
 pip install -e .
 
-# or using uv
+# Or using uv
 uv sync
 ```
 
 ---
 
-## 📊 Data
+## Data Pipeline
 
-### Source Data
-
-| Data | Sumber | Deskripsi | File |
-|------|--------|-----------|------|
-| **BPJS Mobile Reviews** | Google Play Store | Ulasan pengguna aplikasi BPJS Mobile (app.bpjs.mobile) | `bpjs_reviews_1.csv` - `bpjs_reviews_5.csv` |
-| **FastText Embeddings** | Facebook Research | Pre-trained Indonesian word embeddings (300-dimensional) | `embedding/cc.id.300.vec/cc.id.300.vec` |
+### Data Sources
+| Data | Source | Description | File |
+|------|--------|-------------|------|
+| **BPJS Mobile Reviews** | Google Play Store | Real user reviews from BPJS Mobile app | `bpjs_reviews_1.csv` - `bpjs_reviews_5.csv` |
+| **FastText Embeddings** | Facebook Research | Pre-trained Indonesian word vectors (300-dim) | `embedding/cc.id.300.vec` |
 
 **Dataset Characteristics:**
-- Total Reviews: ~4,000+
-- Bahasa: Indonesian
-- Classes: 3 (Positive, Neutral, Negative)
-- Format: CSV dengan kolom (reviewer, rating, text, sentiment)
+- **Total Reviews**: ~4,000+
+- **Language**: Indonesian
+- **Classes**: 3 (Positive, Neutral, Negative)
+- **Format**: CSV with columns (reviewer, rating, text, sentiment)
 
 ### Data Acquisition
-
-Menggunakan Google Play Scraper untuk mengekstrak ulasan real-time:
-
+Using Google Play Scraper for real-time review extraction:
 ```python
 from script.scraping import scrape_playstore_reviews
 
-# Ambil 1000 review terbaru
 df = scrape_playstore_reviews(
     app_id='app.bpjs.mobile',
     target_count=1000,
     batch_size=500,
-    filter_score=None  # Optional: filter by rating
+    filter_score=None
 )
-
 df.to_csv('data/bpjs_reviews_new.csv', index=False)
 ```
-
-**Rate Limiting:** 1 detik delay antar batch untuk menghindari IP ban
-
-### Data Preprocessing
-
-#### 1. Text Cleaning
-- Konversi ke lowercase
-- Hapus URLs dan emails
-- Hapus special characters dan symbols
-- Handle emoji (konversi atau hapus)
-
-#### 2. Tokenization & Normalization
-- Tokenisasi ke kata individual (NLTK)
-- Hapus stopwords (Indonesia + custom)
-- Normalisasi whitespace
-
-#### 3. Stemming
-- Apply Sastrawi stemmer (Indonesian)
-- Reduce kata ke root form
-
-#### 4. Automatic Labeling (Hugging Face RoBERTa)
-- **Model**: `w11wo/indonesian-roberta-base-sentiment-classifier`
-- Pre-trained model dari Hugging Face untuk sentiment classification bahasa Indonesia
-- Otomatis mengklasifikasi teks ke 3 kelas: Negative, Neutral, Positive
-- Digunakan untuk memberikan label awal sebelum dilakukan fine-tuning dengan BiLSTM
-
-#### 5. Sequence Processing
-- Konversi teks ke sequence numbers
-- Padding ke `max_sequence_length = 60`
-
-#### 6. Word Embeddings
-- Load pre-trained FastText embeddings
-- Create embedding matrix dari vocabulary
-- Embedding dimension: 300
-
-#### 7. Data Augmentation & Balancing
-- Gunakan NLPAug untuk augmentasi teks dengan FastText embeddings
-- Handle class imbalance dengan oversampling
-- Maintain balanced distribution antar kelas
+**Note**: 1-second delay between batches to avoid IP blocking
 
 ---
 
-## 📁 Code Structure
+### **Data Science Methodology Highlights:**
 
-```
-Sentimen Analisis/
-├── pyproject.toml                       # Project configuration & dependencies
-├── README.md                            # Dokumentasi proyek
-│
-├── data/                                # Dataset folder
-│   ├── bpjs_reviews_1.csv               # Raw data batch 1
-│   ├── bpjs_reviews_2.csv               # Raw data batch 2
-│   ├── bpjs_reviews_3.csv               # Raw data batch 3
-│   ├── bpjs_reviews_4.csv               # Raw data batch 4
-│   └── bpjs_reviews_5.csv               # Raw data batch 5
-│
-├── notebooks/                           # Jupyter notebooks
-│   ├── model.ipynb                      # Main notebook: EDA, preprocessing, training
-│   └── best_model.keras                 # Trained model weights (best performance)
-│
-└── script/                              # Python modules
-    └── scraping.py                      # Google Play Store scraper
-
-**Key Files:**
-- `notebooks/model.ipynb` - Main pipeline (EDA, preprocessing, training, evaluation)
-- `notebooks/best_model.keras` - Deploy-ready model
-- `script/scraping.py` - Data collection module
+| Stage | Focus Area | Key Techniques | Output |
+|-------|-----------|-----------------|--------|
+| **1. EDA** | Understand data distribution | Visualization, Statistical Analysis | Data Insights & Quality Report |
+| **2. Cleaning** | Text normalization | Tokenization, Stemming, Stopword Removal | Cleaned Text Corpus |
+| **3. Labeling** | Automatic annotation | Transformer-based RoBERTa Model | Sentiment Labels (3-class) |
+| **4. Features** | Vector representation | FastText Embeddings (300-dim) | Sequence Embeddings |
+| **5. Balancing** | Handle class imbalance | NLPAug Augmentation | Balanced Training Set |
+| **6. Training** | Model optimization | BiLSTM + Callbacks | Fine-tuned Neural Network |
+| **7. Evaluation** | Performance validation | Metrics & Classification Report | Model Performance Analysis |
 
 ---
 
-## 📊 Results and Evaluation
 
-### Workflow Pipeline
+The project follows a **complete end-to-end data science pipeline** with **7 critical stages**, from raw data ingestion to production-ready sentiment classification. This workflow emphasizes reproducibility, scalability, and interpretability.
 
-Raw Text Data (20,000 reviews)  
-↓  
-**Text Cleaning & Preprocessing**
-- Lowercase + Unidecode
-- Remove emoji, URLs, mentions
-- Remove special characters
-- Tokenization
-- Fix slang words
-- Handle negation
-- Remove stopwords
-- Stemming (Sastrawi)
-↓  
-**Automatic Labeling – Hugging Face RoBERTa**
-- Model: indonesian-roberta-base-sentiment-classifier
-- 3 Classes: Negative, Neutral, Positive
-- Output: Labeled dataset
-↓  
-**Feature Engineering**
-- Sequence to tokens (Tokenizer)
-- Padding (max_length=60)
-- Embedding matrix (FastText 100‑dim)
-- Label encoding (0,1,2)
-↓  
-**Data Augmentation**
-- Positive class: 1× augmentation
-- Neutral class: 2× augmentation
-- Result: Balanced training set
-↓  
-**Model Training**
-- Architecture: BiLSTM with Embedding
-- Optimizer: Adam
-- Early Stopping + ReduceLROnPlateau
-- Class weights: balanced
-- Output: Trained model
-↓  
-**Evaluation & Inference**
-- Metrics: Accuracy, Precision, Recall, F1-Score
+### **Stage 1: Exploratory Data Analysis (EDA)**
+- Analyze review distribution and sentiment class balance
+- Generate word frequency statistics
+- Create word clouds for each sentiment class
+- Visualize rating distributions and trends
+- Identify data quality issues and missing values
 
+**Key Insights:**
+- Understand class imbalance (if any)
+- Discover common keywords per sentiment
+- Profile review length and complexity
 
-#### Accuracy & Loss
+### **Stage 2: Data Preprocessing & Cleaning**
+
+#### Text Cleaning
+- Convert to lowercase for consistency
+- Remove URLs, emails, and mentions
+- Remove special characters and symbols
+- Handle emoji (convert or remove)
+- Fix whitespace normalization
+
+#### Tokenization & Normalization
+- Tokenize text into individual words (NLTK)
+- Remove Indonesian stopwords + custom stopwords
+- Normalize whitespace
+
+#### Stemming (Indonesian)
+- Apply **Sastrawi stemmer** (Indonesian-specific)
+- Reduce words to root form (e.g., "berlari" → "lari")
+- Improves vocabulary consistency
+
+**Example Pipeline:**
 ```
-Training Accuracy: 88.9%
-Validation Accuracy: 80.7%
-
-Training Loss: 0.30
-Validation Loss: 0.47
+"Aplikasinya sangat membantu banget!"
+↓ (lowercase) → "aplikasinya sangat membantu banget!"
+↓ (tokenize) → ["aplikasinya", "sangat", "membantu", "banget"]
+↓ (remove stopwords) → ["aplikasinya", "membantu"]
+↓ (stemming) → ["aplikasi", "bantu"]
 ```
 
-#### Per-Class Metrics (Validation Set)
+### **Stage 3: Automatic Labeling (Auto-Annotation)**
+- **Model**: `w11wo/indonesian-roberta-base-sentiment-classifier` (Hugging Face)
+- **Purpose**: Pre-label reviews using pre-trained transformer model
+- **Output**: 3-class labels (Negative, Neutral, Positive)
+- **Advantage**: Provides initial labels for training before fine-tuning
 
-| Sentiment | Precision | Recall | F1-Score | Support |
-|-----------|-----------|--------|----------|----------|
-| Negative | 0.82 | 0.89 | 0.85 | 2395 |
-| Neutral | 0.59 | 0.45 | 0.51 | 1513 |
-| Positive | 0.85 | 0.82 | 0.83 | 2092 |
-| **Macro Avg** | **0.75** | **0.72** | **0.73** | **6000** |
+### **Stage 4: Feature Engineering & Vectorization**
 
-#### Classification Insights (Baseline Model)
+#### Sequence Processing
+- Convert cleaned text to token sequences
+- Pad sequences to `max_sequence_length = 60`
+- Standardize input dimensions for neural network
 
-**Strengths:**
-- **Negative sentiment** detection sangat baik (Recall: 89%) - berhasil menangkap 89% dari ulasan komplain sebenarnya
-- **Positive sentiment** memiliki precision tinggi (85%) - ketika model prediksi positif, itu reliable
-- Model lebih aggressive dalam mengidentifikasi kelas mayoritas
+#### Word Embeddings
+- Load pre-trained **FastText embeddings** (300-dimensional)
+- Create embedding matrix from project vocabulary
+- Map tokens to dense vector representations
+- **Embedding Dimension**: 300 features per word
 
-**Weaknesses:**
-- **Neutral sentiment** sangat challenging (Recall hanya 45%) - model kesulitan membedakan netral dari positive
-- Terjadi **overfitting** (Training Accuracy 88.9% → Validation 80.7%) - model terlalu fit ke data training
-- Macro F1-Score 73% menunjukkan performa yang belum seimbang antar kelas
+**Embedding Process:**
+```
+Token sequence: [app_id_1, app_id_2, app_id_3, ...]
+        ↓
+Embedding matrix lookup
+        ↓
+Dense vectors: [[0.2, -0.1, 0.5, ...], [0.1, 0.3, -0.2, ...], ...]
+(Each vector is 300-dimensional)
+```
 
-**Trade-off Utama:**
-Model baseline fokus menangkap ulasan negatif (recall tinggi) dengan mengorbankan kemampuan membedakan kategori netral dan positif.
+#### Label Encoding
+- Encode sentiment classes: Negative=0, Neutral=1, Positive=2
 
-### Visualizations
+### **Stage 5: Data Augmentation & Class Balancing**
+- Use **NLPAug** with FastText embeddings for synonym replacement
+- Augment minority classes to balance dataset:
+  - Positive class: 1× augmentation
+  - Neutral class: 2× augmentation
+- Result: Balanced training set across all 3 classes
+- **Benefit**: Reduces class imbalance bias during training
 
-**Training History:**
-- Convergence plot menunjukkan training optimal pada epoch ~40
-- Validation curve smooth tanpa extreme overfitting
+### **Stage 6: Model Architecture, Training & Optimization**
 
-**Confusion Matrix:**
-- Strongest pada diagonal (correct predictions)
-- Neutral sering disalahartikan sebagai Positive
-
-**Model Architecture:**
+#### Neural Network Architecture
 ```
 Input Layer (Variable Length)
     ↓
-Embedding (300 dimensions)
+Embedding Layer (300 dimensions)
     ↓
-BiLSTM (128 units, bidirectional)
+Bidirectional LSTM (128 units)
     ↓
 Dropout (0.3)
     ↓
-Dense (64 units, ReLU)
+Dense Layer (64 units, ReLU activation)
     ↓
 Dropout (0.3)
     ↓
 Output Layer (3 units, Softmax)
+    ↓
+Classification (Negative | Neutral | Positive)
 ```
 
-### Hyperparameter Configuration
-
-#### Baseline Model
+#### Training Configuration
 ```python
-# Baseline parameters (BiLSTM)
 embedding_dim = 100
 max_sequence_length = 60
 lstm_units = 96
@@ -317,8 +254,14 @@ optimizer = Adam
 loss = sparse_categorical_crossentropy
 ```
 
-#### Tuning Range
-Model hyperparameter tuning menggunakan **Keras Tuner dengan Bayesian Optimization** untuk mencari optimal parameters:
+#### Optimization Techniques
+- **Early Stopping**: Stop training if validation loss plateaus
+- **ReduceLROnPlateau**: Reduce learning rate if validation metric stops improving
+- **Class Weights**: Balanced weights to handle class imbalance
+- **Callbacks**: ModelCheckpoint to save best weights
+
+#### Hyperparameter Tuning
+Using **Keras Tuner with Bayesian Optimization** for optimal parameters:
 - LSTM Units: [64, 96, 128]
 - Spatial Dropout: 0.2 - 0.5
 - LSTM Dropout: 0.2 - 0.4
@@ -326,64 +269,180 @@ Model hyperparameter tuning menggunakan **Keras Tuner dengan Bayesian Optimizati
 - Learning Rate: [5e-4, 3e-4, 1e-4]
 - L2 Regularization: [1e-4, 1e-5]
 
----
+### **Stage 7: Model Evaluation, Validation & Performance Analysis**
 
-## 🚀 Future Work
+#### **Performance Metrics**
+```
+Training Accuracy:   88.9%
+Validation Accuracy: 80.7%
 
-1. **Model Improvements**
-   - [ ] Implement Transformer-based models (BERT, RoBERTa)
-   - [ ] Ensemble multiple architectures
-   - [ ] Fine-tune pre-trained Indonesian BERT models
+Training Loss:   0.30
+Validation Loss: 0.47
+```
 
-2. **Feature Enhancements**
-   - [ ] Aspect-based sentiment analysis
-   - [ ] Emotion detection (5+ emotions)
-   - [ ] Sarcasm detection
+#### **Per-Class Performance Breakdown**
 
-3. **Deployment**
-   - [ ] Create REST API endpoint
-   - [ ] Deploy ke cloud (GCP, AWS, atau Azure)
-   - [ ] Build web dashboard untuk visualization
-   - [ ] Implement real-time scraping & prediction
+| Sentiment | Precision | Recall | F1-Score | Support |
+|-----------|-----------|--------|----------|---------|
+| **Negative** | 0.82 | 0.89 | 0.85 | 2,395 |
+| **Neutral** | 0.59 | 0.45 | 0.51 | 1,513 |
+| **Positive** | 0.85 | 0.82 | 0.83 | 2,092 |
+| **Macro Average** | **0.75** | **0.72** | **0.73** | **6,000** |
 
-4. **Data & Analysis**
-   - [ ] Expand ke aplikasi lain (selain BPJS)
-   - [ ] Temporal analysis (sentiment trends over time)
-   - [ ] Topic modeling on negative reviews
-   - [ ] User demographic analysis
+#### **Model Strengths & Competitive Advantages**
+**Negative Sentiment Detection**: Excellent recall (89%) - captures most complaint reviews
+**Positive Sentiment**: High precision (85%) - reliable positive predictions
+**Balanced Training**: Uses class weights to handle imbalance effectively
 
-5. **Production**
-   - [ ] Model versioning dan monitoring
-   - [ ] A/B testing untuk model variants
-   - [ ] Automated retraining pipeline
-   - [ ] Model interpretability (LIME, SHAP)
+#### **Model Limitations & Challenges**
+**Neutral Class Challenge**: Low recall (45%) - struggles to distinguish neutral from positive
+**Overfitting**: Training accuracy (88.9%) >> Validation accuracy (80.7%)
+**Class Imbalance Impact**: Macro F1-Score (73%) shows uneven performance across classes
 
----
-
-## 📚 Acknowledgments & References
-
-### Data Sources & Tools
-- **Google Play Scraper**: [github.com/JoMingyu/google-play-scraper](https://github.com/JoMingyu/google-play-scraper)
-- **FastText**: [fasttext.cc](https://fasttext.cc) - Pre-trained Indonesian embeddings
-- **Sastrawi**: [github.com/har07/Sastrawi](https://github.com/har07/Sastrawi) - Indonesian stemmer
-- **Keras Tuner**: [keras.io/keras_tuner](https://keras.io/keras_tuner/) - Hyperparameter optimization
-
-### Publications & References
-- Hochreiter & Schmidhuber (1997) - LSTM architecture
-- Graves & Schmidhuber (2005) - Bidirectional RNNs
-- Bojanowski et al. (2016) - FastText word embeddings
-- Devlin et al. (2018) - BERT (Pre-training for NLP)
-
-### Special Thanks
-- BPJS community untuk data yang bermanfaat
-- TensorFlow & Keras team untuk excellent tools
-- Open-source community untuk NLP libraries
+#### **Strategic Insight & Business Implication**
+The baseline model prioritizes capturing negative sentiment (recall=89%) at the expense of distinguishing neutral and positive sentiments. This trade-off reflects the model's focus on identifying customer complaints.
 
 ---
 
-## 📝 License
+## Project Structure
 
-This project is licensed under the **MIT License** - see the LICENSE file for details.
+```
+Sentimen Analisis/
+├── pyproject.toml                    # Project configuration & dependencies
+├── README.md                         # Documentation (this file)
+│
+├── data/                             # Dataset directory
+│   ├── bpjs_reviews_1.csv            # Raw data batch 1
+│   ├── bpjs_reviews_2.csv            # Raw data batch 2
+│   ├── bpjs_reviews_3.csv            # Raw data batch 3
+│   ├── bpjs_reviews_4.csv            # Raw data batch 4
+│   └── bpjs_reviews_5.csv            # Raw data batch 5
+│
+├── notebooks/                        # Jupyter notebooks (core pipeline)
+│   ├── model.ipynb                   # Main notebook:
+│   │                                 # ├─ Stage 1: EDA & visualization
+│   │                                 # ├─ Stage 2-3: Preprocessing & auto-labeling
+│   │                                 # ├─ Stage 4-5: Embeddings & augmentation
+│   │                                 # ├─ Stage 6: Model architecture & training
+│   │                                 # └─ Stage 7: Evaluation & analysis
+│   │
+│   └── best_model.keras              # Trained model weights (production-ready)
+│
+└── script/                           # Python modules
+    └── scraping.py                   # Google Play Store scraper utility
+
+**Key Files:**
+- `notebooks/model.ipynb` - Complete data science pipeline
+- `notebooks/best_model.keras` - Production model (fine-tuned BiLSTM)
+- `script/scraping.py` - Data collection module
+```
+
+---
+
+## Model Notebook Breakdown (`model.ipynb`)
+
+The main notebook implements all 7 stages of the data science workflow:
+
+### Cell Structure
+1. **Imports** - Load all required libraries and dependencies
+2. **Data Loading** - Read CSV files and combine datasets
+3. **Stage 1: EDA** - Statistical analysis and visualizations
+4. **Stage 2-3: Preprocessing** - Clean text and apply auto-labeling
+5. **Stage 4-5: Feature Engineering** - Create embeddings and augment data
+6. **Stage 6: Model Building** - Define and configure BiLSTM architecture
+7. **Stage 6: Training** - Train model with callbacks and monitoring
+8. **Stage 7: Evaluation** - Generate classification reports and plots
+
+### Visualization Outputs
+- **Training History**: Convergence plots showing loss and accuracy over epochs
+- **Confusion Matrix**: Heatmap showing prediction patterns per class
+- **Word Clouds**: Separate visualizations for each sentiment class
+- **ROC Curves**: Performance across decision thresholds
+- **Classification Report**: Detailed metrics per class
+
+---
+
+## Usage & Inference
+
+### Making Predictions
+```python
+import tensorflow as tf
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+# Load trained model
+model = tf.keras.models.load_model('notebooks/best_model.keras')
+
+# Preprocess new text
+new_review = "Aplikasinya sangat membantu dalam memantau kesehatan saya"
+# [Apply cleaning, tokenization, embedding steps...]
+sequences = tokenizer.texts_to_sequences([new_review])
+padded = pad_sequences(sequences, maxlen=60)
+
+# Make prediction
+prediction = model.predict(padded)
+sentiment_label = ['Negative', 'Neutral', 'Positive'][prediction.argmax()]
+confidence = prediction.max()
+
+print(f"Sentiment: {sentiment_label} (Confidence: {confidence:.2%})")
+```
+
+---
+
+## Future Improvements
+
+### 1. Model Architecture
+- [ ] Implement Transformer-based models (BERT, RoBERTa)
+- [ ] Ensemble multiple architectures for robustness
+- [ ] Fine-tune Indonesian BERT models (IndoBERT)
+- [ ] Experiment with Attention mechanisms
+
+### 2. Advanced Features
+- [ ] Aspect-Based Sentiment Analysis (identify what users like/dislike)
+- [ ] Multi-emotion detection (expand beyond 3 classes)
+- [ ] Sarcasm and irony detection
+- [ ] Entity recognition for feature-level insights
+
+### 3. Deployment & API
+- [ ] Build REST API endpoint for inference
+- [ ] Deploy to cloud (GCP, AWS, or Azure)
+- [ ] Create web dashboard for real-time monitoring
+- [ ] Implement continuous scraping and prediction pipeline
+
+### 4. Analytics & Insights
+- [ ] Expand to other applications (beyond BPJS)
+- [ ] Temporal analysis (sentiment trends over time)
+- [ ] Topic modeling on negative reviews for root cause analysis
+- [ ] User demographic analysis and profiling
+
+### 5. Production & Maintenance
+- [ ] Model versioning and experiment tracking (MLflow)
+- [ ] Performance monitoring and drift detection
+- [ ] A/B testing framework for model variants
+- [ ] Automated retraining pipeline
+- [ ] Model interpretability (LIME, SHAP) for explainability
+
+---
+
+## References & Acknowledgments
+
+### Key Research & Architecture
+- **LSTM Networks**: Hochreiter & Schmidhuber (1997) - [Learning Long-Term Dependencies with Gradient Descent is Difficult](http://www.bioinf.jku.at/publications/older/2604.pdf)
+- **Bidirectional RNNs**: Graves & Schmidhuber (2005) - [Framewise phoneme classification with bidirectional LSTM networks](https://ieeexplore.ieee.org/document/1367959)
+- **FastText Embeddings**: Bojanowski et al. (2016) - [Enriching Word Vectors with Subword Information](https://arxiv.org/abs/1607.04606)
+- **BERT**: Devlin et al. (2018) - [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/abs/1810.04805)
+
+### Tools & Libraries
+- **[google-play-scraper](https://github.com/JoMingyu/google-play-scraper)** - App store review crawler
+- **[Sastrawi](https://github.com/har07/Sastrawi)** - Indonesian stemming library
+- **[Keras Tuner](https://keras.io/keras_tuner/)** - Hyperparameter optimization framework
+- **[FastText](https://fasttext.cc/)** - Efficient word vectors library
+- **[Hugging Face Transformers](https://huggingface.co/transformers/)** - Pre-trained NLP models
+  
+---
+
+## License
+
+This project is licensed under the **MIT License** - see LICENSE file for details.
 
 ```
 MIT License
@@ -392,18 +451,32 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software...
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 ```
 
-**Dataset License:** 
-- BPJS Reviews: Sourced from public Google Play Store data
-- FastText Embeddings: Licensed under Creative Commons Attribution 3.0
+**Data Attribution:**
+- **BPJS Reviews**: Sourced from public Google Play Store data
+- **FastText Embeddings**: Creative Commons Attribution 3.0 License
 
 ---
 
 ## 👤 Author & Contact
 
 **Project Developer**: Ratuayu Nurfajar
-- **GitHub**: @ratuanfajar (https://github.com/ratuanfajar)
+
+- **GitHub**: [@ratuayunurfajar](https://github.com/ratuayunurfajar)
 - **Email**: ratua4820.email@gmail.com
-- **LinkedIn**: Ratuayu Nurfajar (https://www.linkedin.com/in/ratuayunurfajar/)
+- **LinkedIn**: [Ratuayu Nurfajar](https://www.linkedin.com/in/ratuayunurfajar/)
+
+---
+
+## Quick Stats
+- **Total Notebooks**: 1 (Complete pipeline)
+- **Data Science Stages**: 7 (EDA → Preprocessing → Labeling → Features → Training → Evaluation)
+- **Model Architecture**: Bidirectional LSTM with FastText Embeddings
+- **Best Validation Accuracy**: 80.7%
+- **Macro F1-Score**: 0.73
